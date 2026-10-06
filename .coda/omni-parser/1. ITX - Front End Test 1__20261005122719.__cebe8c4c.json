@@ -1,0 +1,48 @@
+{
+  "status": "success",
+  "parts": [
+    {
+      "type": "text",
+      "text": "Front-End Test",
+      "page": 1
+    },
+    {
+      "type": "text",
+      "text": "# RESUMEN\n\nEsta prueba consiste en la creación de una mini-aplicación para comprar dispositivos moviles.\n\n• La aplicación tendrá únicamente dos vistas:\n\n1. Vista principal - Listado de productos\n\n2. Detalles del producto • La implementación de los diseños queda a libre elección, pero deberá seguir la estructura que se ha definido en las capturas. Se valorará positivamente el nivel de detalle de la propuesta. • Se requiere la utilización de React/Preact para el desarrollo de aplicación y se podra complementar con otras librerias JS si se estima oportuno. • Se permite la utilización de JS con ES6, y preferiblemente que no se realize la prueba con Typescript. • Se prodrá utilizar un boilerplate template para la creación de la estructura del proyecto. • La aplicación será una SPA, donde se añadirá el enrutado de la vistas el codigo de cliente, sin que sea una MPA o la utilización de SSR. • El proyecto tendrá que contener los siguiente script, para poder gestionar la aplicación:\n\n1. START - Modo desarrollo\n\n2. BUILD - Compilación para modo Producción\n\n3. TEST - Lanzamiento de test\n\n# 4. LINT - Comprobación de código • El proyecto deberá presentarse en un repositorio de codigo abierto (Github, Gitlab, Bitbucket), con la solución al problema. Se quiere que se pueda subir el codigo de manera evolutiva de manera que se vaya alcanzando hitos. • En el repositorio hay que incluir un documento README (preferiblemente incluirlo en el primer commit), donde se incluirá la explicación para ejecutar el proyecto asi como alguna nota explicativas o información adicional que se consideré necesaria.",
+      "page": 2
+    },
+    {
+      "type": "text",
+      "text": "# DESCRIPCION DE LAS VISTAS\n\nPLP - Product List Page\n\nPagina donde se visualizará la lista de los productos.\n\n• • Esta pagina, se mostrarán todos los elementos que nos devuelve la petición del API • Permitirá el filtrado del contenido en función del criterio de busqueda que el usuario introduzca • Al seleccionar un producto, deberá navegar a los detalles del mismo. • Se mostrarán un maximo de cuatro elementos por fila, y que sea adaptativo segun la resolución.\n\nPDP - Product Details Page\n\n• Esta pagina de dividirá en dos columnas:\n\no En la primera se mostrará el componente de la imagen del producto\n\no En la segunda, se mostrará los detalles y las acciones del producto • Deberá mostrar un link para navegar de vuelta a la lista de productos.",
+      "page": 3
+    },
+    {
+      "type": "text",
+      "text": "# DESCRIPCION DE LOS COMPONENTES\n\nCabecera (HEADER)\n\n• El titulo o el icono de la aplicación, actuará como enlace a la vista principal.\n\n• Se mostrará un breadcrumbs, mostrando la pagina donde se encuentra el usuario asi como un link para su navegación.\n\n• En la parte derecha de la cabecerá, se mostrará el numero de items que se hayan añadido al carrito.\n\nBarra de Busqueda (SEARCH)\n\n• Se mostrará un input al usuario, el permitirá la introdución de una cadena de texto.\n\n• El usuario deberá filtra los productos en función del texto introducido, y se comparará con el Marca y el Modelo de los productos.\n\n• El filtrado, será en tiempo real, es decir, se lanzará una busqueda cada vez que el usuario cambie los criterios de busqueda.\n\nElemento lista (ITEM)\n\n• Se mostrará la siguiente información del producto:\n\no Imagen\n\no Marca\n\no Modelo\n\no Precio\n\nImagen Producto (IMAGE)\n\n• Se visualizará la imagen del producto\n\nDescripción Producto (DESCRIPTION)\n\n• Se mostrará los detalles asociados a los productos. Se mostrarán al menos los siguientes atributos:\n\no Marca\n\no Modelo\n\no Precio\n\no CPU\n\no RAM\n\no Sistema Operativo\n\no Resolucion de pantalla\n\no Bateria\n\no Camaras\n\no Dimensiones\n\no Peso",
+      "page": 5
+    },
+    {
+      "type": "text",
+      "text": "Acciones Producto (ACTIONS)\n\n• Se mostrará dos tipos de selectores, donde el usuario, podra seleccionar el tipo del producto que quiere añadir a la cesta. Se mostrarán los selectores de opciones para las siguiente atributos:\n\no Almacenamiento\n\no Colores\n\n• Aunque solo exista una opción, se mostrará el selector con la información. Para este caso de uso, deberá estar seleccionado por defecto.\n\n• Se visualizará un boton de Añadir, donde el usuario, un vez seleccionada las opciones, añadirá el producto a la cesta.\n\n• Al añadir un producto mediante el API, se requiere mandar la siguiente información:\n\no El identificador del producto\n\no El codigo de color seleccionado\n\no El codigo de la capacidad de almacenamiento seleccionada\n\n# • La petición de añadir, devuelve en la respuesta, el numero de productos que hay en la cesta. Este valor deberá mostrarse en la cabecera de la aplicación en cualquier vista de la misma. Para ello se requiere persistir el dato.",
+      "page": 6
+    },
+    {
+      "type": "text",
+      "text": "# RECURSOS\n\nIntegración API\n\nPara poder realizar la prueba, se requiere integrar con un API para la gestión de los datos.\n\nEl dominio del API será el mismo para todos los Endpoints, y será el siguiente:\n\nhttps://itx-frontend-test.onrender.com/\n\nLas definiciones de los Endpoints son los siguientes:\n\n• Obtener el listado de productos Path\n\nGET /api/product\n\nResponse\n\n[ { id: 0001, ... }, { id: 0002, ... } ]\n\n• Obtener el Detalle de producto Path\n\nGET /api/product/:id\n\nResponse\n\n{ id: 0001, ... }\n\n• Añadir producto a la cesta Path\n\nPOST /api/cart",
+      "page": 7
+    },
+    {
+      "type": "text",
+      "text": "Body\n\n{ id: 0001, colorCode: 1, storageCode: 2 }\n\nResponse\n\n{ count: 1 }\n\nPersistencia de datos\n\nSe requiere, añadir un almacenaje en cliente de los datos que se reciban desde el API. Lo que se quiere ofrecer es un sistema de cacheo, para no se realicen cada vez peticiones al API. Por ellos, se require definir la siguiente funcionalidad:\n\n• Se almacenará la información cada vez que se solicite al servicio del API\n\n• Se guardará dicha información, y tendrá una expiración de 1 hora, una vez excedido dicho tiempo, deberá revalidarse la información\n\n# • Se podrá utilizar cualquier metodo de storage para almacenar dicha información, ya sea del navegador o en memoria, pero siempre en cliente.",
+      "page": 8
+    }
+  ],
+  "requestId": "4fc60a03-92e3-4ec3-9eed-94311d3bbd95",
+  "usage": {
+    "total_tokens": 0,
+    "total_cost": 0,
+    "currency": "USD",
+    "prompt_tokens_details": null,
+    "completion_tokens_details": null
+  }
+}
