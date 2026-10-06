@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
+import { axe } from 'jest-axe'
 import ProductListPage from './ProductListPage.jsx'
 import * as api from '../services/api.js'
 
@@ -24,12 +25,13 @@ describe('ProductListPage', () => {
     vi.restoreAllMocks()
   })
 
-  it('shows a loading state while fetching products', () => {
+  it('shows loading skeletons while fetching products', () => {
     vi.spyOn(api, 'getProducts').mockReturnValue(new Promise(() => {}))
 
     renderListPage()
 
-    expect(screen.getByText(/loading products/i)).toBeInTheDocument()
+    expect(screen.getByTestId('skeleton-grid')).toBeInTheDocument()
+    expect(screen.queryByTestId('product-card')).not.toBeInTheDocument()
   })
 
   it('renders all products returned by the API', async () => {
@@ -45,7 +47,7 @@ describe('ProductListPage', () => {
     expect(screen.getByText('Galaxy S23')).toBeInTheDocument()
   })
 
-  it('filters products in real time by brand', async () => {
+  it('filters products by brand after the debounce window', async () => {
     vi.spyOn(api, 'getProducts').mockResolvedValue(mockProducts)
     const user = userEvent.setup()
 
@@ -54,14 +56,17 @@ describe('ProductListPage', () => {
 
     await user.type(screen.getByLabelText(/search products/i), 'google')
 
-    await waitFor(() => {
-      expect(screen.getAllByTestId('product-card')).toHaveLength(1)
-    })
+    await waitFor(
+      () => {
+        expect(screen.getAllByTestId('product-card')).toHaveLength(1)
+      },
+      { timeout: 2000 }
+    )
     expect(screen.getByText('Pixel 7a')).toBeInTheDocument()
     expect(screen.queryByText('iPhone 15')).not.toBeInTheDocument()
-  })
+  }, 5000)
 
-  it('filters products in real time by model', async () => {
+  it('filters products by model after the debounce window', async () => {
     vi.spyOn(api, 'getProducts').mockResolvedValue(mockProducts)
     const user = userEvent.setup()
 
@@ -70,11 +75,14 @@ describe('ProductListPage', () => {
 
     await user.type(screen.getByLabelText(/search products/i), 'galaxy')
 
-    await waitFor(() => {
-      expect(screen.getAllByTestId('product-card')).toHaveLength(1)
-    })
+    await waitFor(
+      () => {
+        expect(screen.getAllByTestId('product-card')).toHaveLength(1)
+      },
+      { timeout: 2000 }
+    )
     expect(screen.getByText('Galaxy S23')).toBeInTheDocument()
-  })
+  }, 5000)
 
   it('shows an empty state when no product matches the search', async () => {
     vi.spyOn(api, 'getProducts').mockResolvedValue(mockProducts)
@@ -90,6 +98,23 @@ describe('ProductListPage', () => {
     })
   })
 
+  it('shows an error with a retry button when the API fails', async () => {
+    vi.spyOn(api, 'getProducts').mockRejectedValue(new Error('Network down'))
+
+    renderListPage()
+
+    await screen.findByRole('alert')
+    expect(screen.getByText(/network error|something went wrong/i)).toBeInTheDocument()
+
+    // Retry succeeds
+    vi.spyOn(api, 'getProducts').mockResolvedValue(mockProducts)
+    await userEvent.click(screen.getByRole('button', { name: /retry/i }))
+
+    await waitFor(() => {
+      expect(screen.getByText('Pixel 7a')).toBeInTheDocument()
+    })
+  })
+
   it('links each product card to its detail page', async () => {
     vi.spyOn(api, 'getProducts').mockResolvedValue(mockProducts)
 
@@ -98,5 +123,15 @@ describe('ProductListPage', () => {
 
     const card = screen.getAllByTestId('product-card')[0]
     expect(card).toHaveAttribute('href', '/product/1')
+  })
+
+  it('has no accessibility violations', async () => {
+    vi.spyOn(api, 'getProducts').mockResolvedValue(mockProducts)
+
+    const { container } = renderListPage()
+    await screen.findByText('Pixel 7a')
+
+    const results = await axe(container)
+    expect(results).toHaveNoViolations()
   })
 })

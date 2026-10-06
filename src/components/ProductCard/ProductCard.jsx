@@ -20,7 +20,7 @@ export default function ProductCard({ product }) {
         <p className="product-card__brand">{product.brand}</p>
         <h3 className="product-card__model">{product.model}</h3>
         <p className="product-card__price">from {product.price} €</p>
-      </div>s
+      </div>
     </Link>
   )
 }

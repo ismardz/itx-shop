@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { axe } from 'jest-axe'
 import { CartProvider } from '../context/CartContext.jsx'
 import Header from '../components/Header/Header.jsx'
 import ProductDetailPage from './ProductDetailPage.jsx'
@@ -52,12 +53,13 @@ describe('ProductDetailPage', () => {
     localStorage.clear()
   })
 
-  it('shows a loading state while fetching the product', () => {
+  it('shows loading skeletons while fetching the product', () => {
     vi.spyOn(api, 'getProductDetail').mockReturnValue(new Promise(() => {}))
 
     renderDetailPage()
 
-    expect(screen.getByText(/loading product/i)).toBeInTheDocument()
+    expect(screen.queryByRole('heading')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /add to cart/i })).not.toBeInTheDocument()
   })
 
   it('renders the product details in two columns with all specs', async () => {
@@ -110,11 +112,14 @@ describe('ProductDetailPage', () => {
     await user.click(screen.getByRole('button', { name: /add to cart/i }))
 
     await waitFor(() => {
-      expect(addToCartSpy).toHaveBeenCalledWith({
-        id: 'ZmQ2',
-        colorCode: 0,
-        storageCode: 1,
-      })
+      expect(addToCartSpy).toHaveBeenCalledWith(
+        {
+          id: 'ZmQ2',
+          colorCode: 0,
+          storageCode: 1,
+        },
+        expect.anything() // AbortController signal
+      )
     })
     await waitFor(() => {
       expect(screen.getByTestId('cart-count')).toHaveTextContent('2')
@@ -142,5 +147,24 @@ describe('ProductDetailPage', () => {
     await waitFor(() => {
       expect(screen.getByRole('alert')).toHaveTextContent('Network error')
     })
+  })
+
+  it('shows an error with retry when the product fetch fails', async () => {
+    vi.spyOn(api, 'getProductDetail').mockRejectedValue(new Error('Network down'))
+
+    renderDetailPage()
+
+    await screen.findByRole('alert')
+    expect(screen.getByRole('button', { name: /retry/i })).toBeInTheDocument()
+  })
+
+  it('has no accessibility violations', async () => {
+    vi.spyOn(api, 'getProductDetail').mockResolvedValue(mockDetail)
+
+    const { container } = renderDetailPage()
+    await screen.findByRole('heading', { name: 'Pixel 7a' })
+
+    const results = await axe(container)
+    expect(results).toHaveNoViolations()
   })
 })

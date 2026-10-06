@@ -1,22 +1,30 @@
-import { createContext, useContext, useEffect, useState } from 'react'
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  useState,
+} from 'react'
 import { getCartCount, setCartCount } from '../services/cartStorage.js'
 
 const CartContext = createContext(null)
 
 export function CartProvider({ children }) {
+  // Lazy initializer reads localStorage once on first render
   const [cartCount, setCartCountState] = useState(() => getCartCount())
 
-  function updateCartCount(count) {
+  const updateCartCount = useCallback((count) => {
     setCartCount(count)
     setCartCountState(count)
-  }
-
-  useEffect(() => {
-    setCartCountState(getCartCount())
   }, [])
 
+  const contextValue = useMemo(
+    () => ({ cartCount, updateCartCount }),
+    [cartCount, updateCartCount]
+  )
+
   return (
-    <CartContext.Provider value={{ cartCount, updateCartCount }}>
+    <CartContext.Provider value={contextValue}>
       {children}
     </CartContext.Provider>
   )

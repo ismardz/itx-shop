@@ -23,3 +23,15 @@ body {
 main {
   min-height: calc(100vh - 6rem);
 }
+
+/* Keyboard focus visibility for all interactive elements */
+:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+  border-radius: 0.25rem;
+}
+
+.product-card:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}

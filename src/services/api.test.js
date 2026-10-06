@@ -1,5 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { getProducts, getProductDetail, addToCart, clearCache } from './api.js'
+import {
+  getProducts,
+  getProductDetail,
+  addToCart,
+  clearCache,
+} from './api.js'
 
 const mockProducts = [
   { id: 'ZmQ2', brand: 'Google', model: 'Pixel 7a', price: 509 },
@@ -40,7 +45,8 @@ describe('api service', () => {
 
     expect(products).toEqual(mockProducts)
     expect(global.fetch).toHaveBeenCalledWith(
-      'https://itx-frontend-test.onrender.com/api/product'
+      'https://itx-frontend-test.onrender.com/api/product',
+      { signal: undefined }
     )
   })
 
@@ -51,6 +57,26 @@ describe('api service', () => {
     await getProducts()
 
     expect(global.fetch).toHaveBeenCalledTimes(1)
+  })
+
+  it('deduplicates concurrent in-flight requests', async () => {
+    let resolveFetch
+    global.fetch = vi.fn().mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveFetch = resolve
+        })
+    )
+
+    const first = getProducts()
+    const second = getProducts()
+
+    resolveFetch({ ok: true, json: () => Promise.resolve(mockProducts) })
+
+    const [resultA, resultB] = await Promise.all([first, second])
+
+    expect(global.fetch).toHaveBeenCalledTimes(1)
+    expect(resultB).toEqual(resultA)
   })
 
   it('revalidates the product list after the 1 hour cache expiration', async () => {
@@ -66,6 +92,28 @@ describe('api service', () => {
     vi.useRealTimers()
   })
 
+  it('persists the cache in localStorage and survives a module reload', async () => {
+    global.fetch = mockFetch(mockProducts)
+    await getProducts()
+
+    const stored = JSON.parse(localStorage.getItem('itx_api_cache'))
+    expect(stored.products.data).toEqual(mockProducts)
+    expect(typeof stored.products.timestamp).toBe('number')
+  })
+
+  it('serves from localStorage after memory cache is cleared (reload simulation)', async () => {
+    global.fetch = mockFetch(mockProducts)
+    await getProducts()
+
+    // Simulate reload: memory cache is empty but localStorage persists
+    clearCache({ keepPersistent: true })
+    global.fetch = mockFetch(mockProducts)
+
+    const products = await getProducts()
+    expect(products).toEqual(mockProducts)
+    expect(global.fetch).not.toHaveBeenCalled()
+  })
+
   it('fetches a product detail by id and caches it', async () => {
     global.fetch = mockFetch(mockDetail)
 
@@ -76,7 +124,20 @@ describe('api service', () => {
     expect(detailAgain).toEqual(mockDetail)
     expect(global.fetch).toHaveBeenCalledTimes(1)
     expect(global.fetch).toHaveBeenCalledWith(
-      'https://itx-frontend-test.onrender.com/api/product/ZmQ2'
+      'https://itx-frontend-test.onrender.com/api/product/ZmQ2',
+      { signal: undefined }
+    )
+  })
+
+  it('forwards the AbortController signal to fetch', async () => {
+    global.fetch = mockFetch(mockProducts)
+    const abortController = new AbortController()
+
+    await getProducts(abortController.signal)
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      'https://itx-frontend-test.onrender.com/api/product',
+      { signal: abortController.signal }
     )
   })
 
@@ -99,6 +160,7 @@ describe('api service', () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: 'ZmQ2', colorCode: 0, storageCode: 1 }),
+        signal: undefined,
       }
     )
   })

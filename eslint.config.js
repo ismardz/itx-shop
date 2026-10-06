@@ -6,7 +6,7 @@ import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
 
 export default defineConfig([
-  globalIgnores(['dist', 'coverage', 'node_modules']),
+  globalIgnores(['dist', 'coverage', 'node_modules', 'e2e', 'playwright-report', 'test-results']),
   {
     files: ['**/*.{js,jsx}'],
     plugins: {
@@ -36,6 +36,14 @@ export default defineConfig([
       'react/jsx-uses-react': 'error',
       ...reactHooks.configs['recommended-latest'].rules,
       'react-refresh/only-export-components': 'warn',
+    },
+  },
+  {
+    files: ['*.config.js'],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+      },
     },
   },
   {

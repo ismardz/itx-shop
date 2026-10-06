@@ -1,5 +1,21 @@
+# Dependencies
 node_modules
+
+# Build output
 dist
 coverage
-*.local
+playwright-report
+test-results
+
+# IDE
+.idea
+*.iml
+.vscode
+
+# Coda agent workspace
+.coda
+
+# OS / local
 .DS_Store
+*.local
+npm-debug.log*
